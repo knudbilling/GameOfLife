@@ -9,6 +9,12 @@ from gol.files.saver import save_file
 
 class GolController():
     """Controller for Game of Life
+
+    Parameters:
+    model: The game of life model with the state and rules
+    engine: GolEngine class to use
+    grid_view: GolGridView class to use
+    info_view: GolInfoView class to use
     """
 
     def __init__(self, model, engine, grid_view, info_view):
