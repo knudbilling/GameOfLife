@@ -1,5 +1,5 @@
-from rule import Rule
-from coroutine import coroutine
+from gol.rule import Rule
+from gol.coroutine import coroutine
 
 LINESEP = "\n"
 

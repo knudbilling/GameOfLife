@@ -1,8 +1,6 @@
 import queue
 import threading
 
-from collections import defaultdict
-from time import time_ns
 import pygame
 
 BASE_CELL_SIZE = 100

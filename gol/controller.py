@@ -1,6 +1,6 @@
 import queue
-from loader_coro import load_file
-from saver import save_file
+from gol.files.loader import load_file
+from gol.files.saver import save_file
 
 
 class GolController():

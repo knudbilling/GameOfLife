@@ -1,4 +1,4 @@
-from rule import Rule
+from gol.rule import Rule
 
 
 

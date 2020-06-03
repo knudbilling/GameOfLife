@@ -1,8 +1,9 @@
-from model import GolModel
-from engine_isotropic import GolEngine
-from info_view import GolInfoView
-from grid_view import GolGridView
-from controller import GolController
+from gol.model import GolModel
+from gol.engine.isotropic import GolEngine
+from gol.view.info import GolInfoView
+from gol.view.grid import GolGridView
+from gol.controller import GolController
+
 
 engine = GolEngine()
 model = GolModel()

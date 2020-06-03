@@ -1,8 +1,6 @@
-from model import GolModel
-from rule import Rule
-from coroutine import coroutine
-
-
+from gol.model import GolModel
+from gol.rule import Rule
+from gol.coroutine import coroutine
 
 
 @coroutine
