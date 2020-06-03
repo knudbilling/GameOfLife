@@ -1,3 +1,6 @@
+"""Decorator for coroutines
+"""
+
 from functools import wraps
 
 def coroutine(func):

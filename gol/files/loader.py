@@ -1,3 +1,7 @@
+"""Loads game of life files
+Must contain a load_file function
+"""
+
 from gol.model import GolModel
 from gol.rule import Rule
 from gol.coroutine import coroutine
@@ -5,6 +9,15 @@ from gol.coroutine import coroutine
 
 @coroutine
 def rle_decoder(state):
+    """Coroutine to decode rle (run length encoding)
+
+    Parameters:
+    state: set() where alive cells are added
+
+    Yield:
+    s: One charater of the encoded rle string
+    """
+
     x = y = count = 0
 
     while True:
@@ -33,11 +46,20 @@ def rle_decoder(state):
     # End marker was reached.
     # Do nothing for eternity
     while True:
-        black_hole = yield
+        _ = yield
 
 
 @coroutine
 def life_105(model):
+    """Coroutine to collect properties of a Life1.05 file
+
+    Parameters:
+    model: GolModel to be filled with the properties specified in the file
+
+    Yield:
+    line (str): The line from the file to decode
+    """
+
     coord_x = coord_y = 0
     block_x = 0
     while True:
@@ -66,6 +88,15 @@ def life_105(model):
 
 @coroutine
 def life_106(model):
+    """Coroutine to collect properties of a Life1.06 file
+
+    Parameters:
+    model: GolModel to be filled with the properties specified in the file
+
+    Yield:
+    line (str): The line from the file to decode
+    """
+
     while True:
         line = yield
         split_line = line.split(" ")
@@ -74,21 +105,54 @@ def life_106(model):
 
 @coroutine
 def life_rle(model):
+    """Coroutine to collect properties of an rle file
+
+    Parameters:
+    model: GolModel to be filled with the properties specified in the file
+
+    Yield:
+    line (str): The line from the file to decode
+    """
+
+    # Initialise rle decoder
     decoder = rle_decoder(model.state)
+
+    # The first line to decode should be the header
     line = ""
     while not line.startswith("x ="):
         line = yield
-    # x = m, y = n, rule = abc/def
+
+    # Line if of the format:  x = m, y = n, rule = abc/def
     split_line = line.split(",")
-    width = int(split_line[0].split("=")[1])
-    height = int(split_line[1].split("=")[1])
+    #width = int(split_line[0].split("=")[1])
+    #height = int(split_line[1].split("=")[1])
+
+    # Read rules if they are specified in the file
     if len(split_line) > 2:
         rules = split_line[2].split("=")[1].split("/")
-        survival_count = set( int(a) for a in rules[0].strip())
-        birth_count = set(int(a) for a in rules[1].strip())
+
+        # Rule is of the form B3/S23
+        if rules[0].strip()[0] == "B":
+            birth_count = set(int(a) for a in rules[0].strip()[1:])
+            survival_count = set(int(a) for a in rules[1].strip()[1:])
+
+        # Rule is of the form S23/B3
+        elif rules[0].strip()[0] == "S":
+            survival_count = set(int(a) for a in rules[0].strip()[1:])
+            birth_count = set(int(a) for a in rules[1].strip()[1:])
+
+        # Rule is of the form 23/3
+        else:
+            survival_count = set(int(a) for a in rules[0].strip())
+            birth_count = set(int(a) for a in rules[1].strip())
+
         model.rule = Rule(survival_count, birth_count)
+
+    # If no rule is specified, use standard Conway rule
     else:
         model.rule = Rule((2, 3), (3,))
+
+    # The rest of the file should only contain rle
     while True:
         line = yield
         for c in line:
@@ -97,6 +161,15 @@ def life_rle(model):
 
 @coroutine
 def life_plaintext(model):
+    """Coroutine to collect properties of a plaintext file
+
+    Parameters:
+    model: GolModel to be filled with the properties specified in the file
+
+    Yield:
+    line (str): The line from the file to decode
+    """
+
     y_pos = 0
     while True:
         line = yield
@@ -119,6 +192,17 @@ def life_plaintext(model):
 
 @coroutine
 def life_unknown(model):
+    """Coroutine to collect properties of unknown file types
+
+    This is usually rle files, so collect properties for that type of file
+
+    Parameters:
+    model: GolModel to be filled with the properties specified in the file
+
+    Yield:
+    line (str): The line from the file to decode
+    """
+
     while True:
         line = yield
         if line.startswith("#C") or line.startswith("#c"):  # Comment
@@ -137,6 +221,18 @@ def life_unknown(model):
 
 @coroutine
 def read_line(model):
+    """Coroutine to collect decode a line from the input file
+
+    This coroutine determines the file type and route the line to the
+    appropiate coroutine for that file type
+
+    Parameters:
+    model: GolModel to be filled with the properties specified in the file
+
+    Yield:
+    line (str): The line from the file to decode
+    """
+
     decoder = None
     model.state = set()
 
@@ -146,6 +242,7 @@ def read_line(model):
         line = yield
         line = line.strip()
 
+        # If the file type is known
         if decoder:
             decoder.send(line)
         else:
@@ -173,10 +270,12 @@ def load_file(filename):
     filename (str): the file to load
 
     Returns:
-    set((int, int)): a set containing the coordinates of alive cells
+    model: a GolModel containing the properties of the game of life as described in the file
     """
 
     model = GolModel()
+
+    # Initialise read_line coroutine
     reader = read_line(model)
 
     lif_file = open(filename, "r")
